@@ -30,6 +30,12 @@
 #ifndef FLANN_SAMPLING_H_
 #define FLANN_SAMPLING_H_
 
+#include <algorithm>
+#include <cstddef>
+#ifdef FLANN_R_COMPAT
+  #include <random>
+#endif /* FLANN_R_COMPAT */
+
 #include "flann/util/matrix.h"
 #include "flann/util/random.h"
 
@@ -42,11 +48,19 @@ Matrix<T> random_sample(Matrix<T>& srcMatrix, size_t size, bool remove = false)
 	UniqueRandom rand_unique(srcMatrix.rows);
     Matrix<T> newSet(new T[size * srcMatrix.cols], size,srcMatrix.cols);
 
+#ifdef FLANN_R_COMPAT
+        std::random_device rd;
+        std::mt19937 g(rd());
+#endif /* FLANN_R_COMPAT */
     T* src,* dest;
     for (size_t i=0; i<size; ++i) {
     	size_t r;
     	if (remove) {
+#ifndef FLANN_R_COMPAT
             r = static_cast<size_t>(rand_int(srcMatrix.rows-i));
+#else
+            r = static_cast<size_t>(std::uniform_int_distribution<>(0, srcMatrix.rows-i-1)(g));
+#endif /* FLANN_R_COMPAT */
     	}
     	else {
     		r = static_cast<size_t>(rand_unique.next());

@@ -31,14 +31,14 @@
 #ifndef FLANN_DIST_H_
 #define FLANN_DIST_H_
 
-#include <cmath>
-#include <cstdlib>
-#include <string.h>
+#include <cmath>   /* abs, pow, sqrt */
+#include <cstring> /* memcpy */
+
 #ifdef _MSC_VER
 typedef unsigned __int32 uint32_t;
 typedef unsigned __int64 uint64_t;
 #else
-#include <stdint.h>
+#include <cstdint> /* uint32_t, uint64_t */
 #endif
 
 #include "flann/defines.h"
@@ -284,7 +284,7 @@ struct MinkowskiDistance
             diff1 = (ResultType)std::abs(a[1] - b[1]);
             diff2 = (ResultType)std::abs(a[2] - b[2]);
             diff3 = (ResultType)std::abs(a[3] - b[3]);
-            result += pow(diff0,order) + pow(diff1,order) + pow(diff2,order) + pow(diff3,order);
+            result += std::pow(diff0,order) + std::pow(diff1,order) + std::pow(diff2,order) + std::pow(diff3,order);
             a += 4;
             b += 4;
 
@@ -295,7 +295,7 @@ struct MinkowskiDistance
         /* Process last 0-3 pixels.  Not needed for standard vector lengths. */
         while (a < last) {
             diff0 = (ResultType)std::abs(*a++ - *b++);
-            result += pow(diff0,order);
+            result += std::pow(diff0,order);
         }
         return result;
     }
@@ -306,7 +306,7 @@ struct MinkowskiDistance
     template <typename U, typename V>
     inline ResultType accum_dist(const U& a, const V& b, int) const
     {
-        return pow(static_cast<ResultType>(std::abs(a-b)),order);
+        return std::pow(static_cast<ResultType>(std::abs(a-b)),order);
     }
 };
 
@@ -513,8 +513,8 @@ struct HammingPopcnt
             //in the case where size is not dividable by sizeof(size_t)
             //need to mask off the bits at the end
             pop_t a_final = 0, b_final = 0;
-            memcpy(&a_final, a2, modulo);
-            memcpy(&b_final, b2, modulo);
+            std::memcpy(&a_final, a2, modulo);
+            std::memcpy(&b_final, b2, modulo);
             result += __builtin_popcountll(a_final ^ b_final);
         }
 #else
@@ -655,16 +655,16 @@ struct HellingerDistance
 
         /* Process 4 items with each loop for efficiency. */
         while (a < lastgroup) {
-            diff0 = sqrt(static_cast<ResultType>(a[0])) - sqrt(static_cast<ResultType>(b[0]));
-            diff1 = sqrt(static_cast<ResultType>(a[1])) - sqrt(static_cast<ResultType>(b[1]));
-            diff2 = sqrt(static_cast<ResultType>(a[2])) - sqrt(static_cast<ResultType>(b[2]));
-            diff3 = sqrt(static_cast<ResultType>(a[3])) - sqrt(static_cast<ResultType>(b[3]));
+            diff0 = std::sqrt(static_cast<ResultType>(a[0])) - std::sqrt(static_cast<ResultType>(b[0]));
+            diff1 = std::sqrt(static_cast<ResultType>(a[1])) - std::sqrt(static_cast<ResultType>(b[1]));
+            diff2 = std::sqrt(static_cast<ResultType>(a[2])) - std::sqrt(static_cast<ResultType>(b[2]));
+            diff3 = std::sqrt(static_cast<ResultType>(a[3])) - std::sqrt(static_cast<ResultType>(b[3]));
             result += diff0 * diff0 + diff1 * diff1 + diff2 * diff2 + diff3 * diff3;
             a += 4;
             b += 4;
         }
         while (a < last) {
-            diff0 = sqrt(static_cast<ResultType>(*a++)) - sqrt(static_cast<ResultType>(*b++));
+            diff0 = std::sqrt(static_cast<ResultType>(*a++)) - std::sqrt(static_cast<ResultType>(*b++));
             result += diff0 * diff0;
         }
         return result;
@@ -676,7 +676,7 @@ struct HellingerDistance
     template <typename U, typename V>
     inline ResultType accum_dist(const U& a, const V& b, int) const
     {
-        ResultType dist = sqrt(static_cast<ResultType>(a)) - sqrt(static_cast<ResultType>(b));
+        ResultType dist = std::sqrt(static_cast<ResultType>(a)) - std::sqrt(static_cast<ResultType>(b));
         return dist * dist;
     }
 };

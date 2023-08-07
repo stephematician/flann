@@ -32,6 +32,7 @@
 #define FLANN_HEAP_H_
 
 #include <algorithm>
+#include <cstddef> /* size_t */
 #include <vector>
 
 namespace flann

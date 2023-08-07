@@ -31,8 +31,11 @@
 #ifndef FLANN_LOGGER_H
 #define FLANN_LOGGER_H
 
-#include <stdio.h>
-#include <stdarg.h>
+#include <cstdarg>
+#include <cstddef> /* NULL */
+#ifndef FLANN_R_COMPAT
+  #include <cstdio>
+#endif /* FLANN_R_COMPAT */
 
 #include "flann/defines.h"
 
@@ -42,13 +45,19 @@ namespace flann
 
 class Logger
 {
+#ifndef FLANN_R_COMPAT
     Logger() : stream(stdout), logLevel(FLANN_LOG_WARN) {}
+#else
+    Logger() : logLevel(FLANN_LOG_WARN) {}
+#endif /* FLANN_R_COMPAT */
 
     ~Logger()
     {
+#ifndef FLANN_R_COMPAT
         if ((stream!=NULL)&&(stream!=stdout)) {
-            fclose(stream);
+            std::fclose(stream);
         }
+#endif /* FLANN_R_COMPAT */
     }
 
     static Logger& instance()
@@ -59,22 +68,26 @@ class Logger
 
     void _setDestination(const char* name)
     {
+#ifndef FLANN_R_COMPAT
         if (name==NULL) {
             stream = stdout;
         }
         else {
-            stream = fopen(name,"w");
+            stream = std::fopen(name,"w");
             if (stream == NULL) {
                 stream = stdout;
             }
         }
+#endif /* FLANN_R_COMPAT */
     }
 
     int _log(int level, const char* fmt, va_list arglist)
     {
+#ifndef FLANN_R_COMPAT
         if (level > logLevel ) return -1;
-        int ret = vfprintf(stream, fmt, arglist);
+        int ret = std::vfprintf(stream, fmt, arglist);
         return ret;
+#endif /* FLANN_R_COMPAT */
     }
 
 public:
@@ -128,7 +141,9 @@ public:
     LOG_METHOD(debug, FLANN_LOG_DEBUG)
 
 private:
-    FILE* stream;
+#ifndef FLANN_R_COMPAT
+    std::FILE* stream;
+#endif /* FLANN_R_COMPAT */
     int logLevel;
 };
 

@@ -600,7 +600,7 @@ FLANN_EXPORT int flann_compute_cluster_centers_int(int* dataset,
 }
 
 
-#include "flann.hpp"
+#include "flann/flann.hpp"
 
 #endif
 

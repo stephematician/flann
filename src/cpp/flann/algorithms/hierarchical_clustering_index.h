@@ -31,27 +31,29 @@
 #ifndef FLANN_HIERARCHICAL_CLUSTERING_INDEX_H_
 #define FLANN_HIERARCHICAL_CLUSTERING_INDEX_H_
 
+#ifndef FLANN_ONLY_SINGLE_KDTREE
+
 #include <algorithm>
-#include <string>
-#include <map>
 #include <cassert>
-#include <limits>
-#include <cmath>
+#include <cstddef> /* NULL, size_t */
+#ifndef FLANN_R_COMPAT
+  #include <cstdio>
+#endif /* FLANN_R_COMPAT */
+#include <vector>
 
 #ifndef SIZE_MAX
 #define SIZE_MAX ((size_t) -1)
 #endif
 
 #include "flann/general.h"
+#include "flann/algorithms/center_chooser.h"
 #include "flann/algorithms/nn_index.h"
-#include "flann/algorithms/dist.h"
-#include "flann/util/matrix.h"
-#include "flann/util/result_set.h"
 #include "flann/util/heap.h"
 #include "flann/util/allocator.h"
-#include "flann/util/random.h"
-#include "flann/util/saving.h"
-#include "flann/util/serialization.h"
+#ifndef FLANN_NO_SERIALIZATION
+  #include "flann/util/saving.h"
+  #include "flann/util/serialization.h"
+#endif /* FLANN_NO_SERIALIZATION */
 
 namespace flann
 {
@@ -232,6 +234,7 @@ public:
     }
 
 
+#ifndef FLANN_NO_SERIALIZATION
     template<typename Archive>
     void serialize(Archive& ar)
     {
@@ -263,18 +266,19 @@ public:
     	}
     }
 
-    void saveIndex(FILE* stream)
+    void saveIndex(std::FILE* stream)
     {
     	serialization::SaveArchive sa(stream);
     	sa & *this;
     }
 
 
-    void loadIndex(FILE* stream)
+    void loadIndex(std::FILE* stream)
     {
     	serialization::LoadArchive la(stream);
     	la & *this;
     }
+#endif /* FLANN_NO_SERIALIZATION */
 
 
     /**
@@ -330,6 +334,7 @@ private:
     	ElementType* point;
 
     private:
+#ifndef FLANN_NO_SERIALIZATION
     	template<typename Archive>
     	void serialize(Archive& ar)
     	{
@@ -344,6 +349,7 @@ private:
 			}
     	}
     	friend struct serialization::access;
+#endif /* FLANN_NO_SERIALIZATION */
     };
 
     /**
@@ -386,6 +392,7 @@ private:
         };
 
     private:
+#ifndef FLANN_NO_SERIALIZATION
     	template<typename Archive>
     	void serialize(Archive& ar)
     	{
@@ -421,6 +428,7 @@ private:
 
     	}
     	friend struct serialization::access;
+#endif /* FLANN_NO_SERIALIZATION */
     };
     typedef Node* NodePtr;
 
@@ -725,5 +733,7 @@ private:
 };
 
 }
+
+#endif /* FLANN_ONLY_SINGLE_KDTREE */
 
 #endif /* FLANN_HIERARCHICAL_CLUSTERING_INDEX_H_ */

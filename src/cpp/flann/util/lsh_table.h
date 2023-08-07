@@ -35,19 +35,28 @@
 #ifndef FLANN_LSH_TABLE_H_
 #define FLANN_LSH_TABLE_H_
 
+#ifndef FLANN_ONLY_SINGLE_KDTREE
+
 #include <algorithm>
-#include <iostream>
-#include <iomanip>
-#include <limits.h>
+#include <climits> /* CHAR_BIT */
+#include <cmath>
+#include <cstddef> /* ptrdiff_t, size_t */
+#ifndef FLANN_R_COMPAT
+  #include <iostream>
+  #include <iomanip>
+#endif /* FLANN_R_COMPAT */
 #include <random>
+#ifndef FLANN_R_COMPAT
+  #include <stdexcept>
+#endif /* FLANN_R_COMPAT */
 // TODO as soon as we use C++0x, use the code in USE_UNORDERED_MAP
 #if USE_UNORDERED_MAP
-#include <unordered_map>
+  #include <unordered_map>
 #else
-#include <map>
+  #include <map>
 #endif
-#include <math.h>
-#include <stddef.h>
+#include <utility> /* pair */
+#include <vector>
 
 #include "flann/util/dynamic_bitset.h"
 #include "flann/util/matrix.h"
@@ -89,6 +98,7 @@ struct LshStats
     std::vector<std::vector<unsigned int> > size_histogram_;
 };
 
+#ifndef FLANN_R_COMPAT
 /** Overload the << operator for LshStats
  * @param out the streams
  * @param stats the stats to display
@@ -113,6 +123,7 @@ inline std::ostream& operator <<(std::ostream& out, const LshStats& stats)
 
     return out;
 }
+#endif /* FLANN_R_COMPAT */
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -151,8 +162,12 @@ public:
      */
     LshTable(unsigned int /*feature_size*/, unsigned int /*key_size*/)
     {
+#ifndef FLANN_R_COMPAT
         std::cerr << "LSH is not implemented for that type" << std::endl;
         throw;
+#else
+        throw std::invalid_argument("LST is not implemented for that type");
+#endif /* FLANN_R_COMPAT */
     }
 
     /** Add a feature to the table
@@ -234,8 +249,12 @@ public:
      */
     size_t getKey(const ElementType* /*feature*/) const
     {
+#ifndef FLANN_R_COMPAT
         std::cerr << "LSH is not implemented for that type" << std::endl;
-        return 0;
+        throw;
+#else
+        throw std::invalid_argument("LST is not implemented for that type");
+#endif /* FLANN_R_COMPAT */
     }
 
     /** Get statistics about the table
@@ -297,6 +316,7 @@ private:
         }
     }
 
+#ifndef FLANN_NO_SERIALIZATION
     template<typename Archive>
     void serialize(Archive& ar)
     {
@@ -323,6 +343,7 @@ private:
 		}
     }
     friend struct serialization::access;
+#endif /* FLANN_NO_SERIALIZATION */
 
     /** The vector of all the buckets if they are held for speed
      */
@@ -359,7 +380,7 @@ inline LshTable<unsigned char>::LshTable(unsigned int feature_size, unsigned int
 {
     initialize(subsignature_size);
     // Allocate the mask
-    mask_ = std::vector<size_t>((size_t)ceil((float)(feature_size * sizeof(char)) / (float)sizeof(size_t)), 0);
+    mask_ = std::vector<size_t>((size_t)std::ceil((float)(feature_size * sizeof(char)) / (float)sizeof(size_t)), 0);
 
     // A bit brutal but fast to code
     std::vector<size_t> indices(feature_size * CHAR_BIT);
@@ -378,6 +399,7 @@ inline LshTable<unsigned char>::LshTable(unsigned int feature_size, unsigned int
         mask_[idx] |= size_t(1) << (index % divisor); //use modulo to find the bit offset
     }
 
+#ifndef FLANN_R_COMPAT
     // Set to 1 if you want to display the mask for debug
 #if 0
     {
@@ -392,6 +414,7 @@ inline LshTable<unsigned char>::LshTable(unsigned int feature_size, unsigned int
         return out;
     }
 #endif
+#endif /* FLANN_R_COMPAT */
 }
 
 /** Return the Subsignature of a feature
@@ -504,5 +527,7 @@ inline LshStats LshTable<unsigned char>::getStats() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#endif /* FLANN_ONLY_SINGLE_KDTREE */
 
 #endif /* FLANN_LSH_TABLE_H_ */

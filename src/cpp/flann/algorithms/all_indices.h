@@ -30,19 +30,25 @@
 #ifndef FLANN_ALL_INDICES_H_
 #define FLANN_ALL_INDICES_H_
 
+#include <cstddef> /* NULL */
+
 #include "flann/general.h"
 
 #include "flann/algorithms/nn_index.h"
-#include "flann/algorithms/kdtree_index.h"
+#ifndef FLANN_ONLY_SINGLE_KDTREE
+  #include "flann/algorithms/kdtree_index.h"
+#endif /* FLANN_ONLY_SINGLE_KDTREE */
 #include "flann/algorithms/kdtree_single_index.h"
-#include "flann/algorithms/kmeans_index.h"
-#include "flann/algorithms/composite_index.h"
-#include "flann/algorithms/linear_index.h"
-#include "flann/algorithms/hierarchical_clustering_index.h"
-#include "flann/algorithms/lsh_index.h"
-#include "flann/algorithms/autotuned_index.h"
+#ifndef FLANN_ONLY_SINGLE_KDTREE
+  #include "flann/algorithms/kmeans_index.h"
+  #include "flann/algorithms/composite_index.h"
+  #include "flann/algorithms/linear_index.h"
+  #include "flann/algorithms/hierarchical_clustering_index.h"
+  #include "flann/algorithms/lsh_index.h"
+  #include "flann/algorithms/autotuned_index.h"
+#endif /* FLANN_ONLY_SINGLE_KDTREE */
 #ifdef FLANN_USE_CUDA
-#include "flann/algorithms/kdtree_cuda_3d_index.h"
+  #include "flann/algorithms/kdtree_cuda_3d_index.h"
 #endif
 
 
@@ -150,15 +156,19 @@ inline NNIndex<Distance>*
 
 	switch (index_type) {
 
+#ifndef FLANN_ONLY_SINGLE_KDTREE
 	case FLANN_INDEX_LINEAR:
 		nnIndex = create_index_<LinearIndex,Distance,ElementType>(dataset, params, distance);
 		break;
+#endif /* FLANN_ONLY_SINGLE_KDTREE */
 	case FLANN_INDEX_KDTREE_SINGLE:
 		nnIndex = create_index_<KDTreeSingleIndex,Distance,ElementType>(dataset, params, distance);
 		break;
+#ifndef FLANN_ONLY_SINGLE_KDTREE
 	case FLANN_INDEX_KDTREE:
 		nnIndex = create_index_<KDTreeIndex,Distance,ElementType>(dataset, params, distance);
 		break;
+#endif /* FLANN_ONLY_SINGLE_KDTREE */
 		//! #define this symbol before including flann.h to enable GPU search algorithms. But you have
 		//! to link libflann_cuda then!
 #ifdef FLANN_USE_CUDA
@@ -167,6 +177,7 @@ inline NNIndex<Distance>*
 		break;
 #endif
 
+#ifndef FLANN_ONLY_SINGLE_KDTREE
 	case FLANN_INDEX_KMEANS:
 		nnIndex = create_index_<KMeansIndex,Distance,ElementType>(dataset, params, distance);
 		break;
@@ -182,6 +193,7 @@ inline NNIndex<Distance>*
 	case FLANN_INDEX_LSH:
 		nnIndex = create_index_<LshIndex,Distance,ElementType>(dataset, params, distance);
 		break;
+#endif /* FLANN_ONLY_SINGLE_KDTREE */
 	default:
 		throw FLANNException("Unknown index type");
 	}

@@ -30,10 +30,13 @@
 #ifndef MPI_QUERIES_H_
 #define MPI_QUERIES_H_
 
-#include <flann/mpi/matrix.h>
+#ifndef FLANN_R_COMPAT
+
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/asio.hpp>
+
+#include "flann/mpi/matrix.h"
 
 namespace flann
 {
@@ -45,11 +48,13 @@ struct Request
 	int nn;
 	int checks;
 
+#ifndef FLANN_NO_SERIALIZATION
 	template<typename Archive>
 	void serialize(Archive& ar, const unsigned int version)
 	{
 		ar & queries & nn & checks;
 	}
+#endif /* FLANN_NO_SERIALIZATION */
 };
 
 template<typename T>
@@ -58,11 +63,13 @@ struct Response
 	flann::Matrix<int> indices;
 	flann::Matrix<T> dists;
 
+#ifndef FLANN_NO_SERIALIZATION
 	template<typename Archive>
 	void serialize(Archive& ar, const unsigned int version)
 	{
 		ar & indices & dists;
 	}
+#endif /* FLANN_NO_SERIALIZATION */
 };
 
 
@@ -98,6 +105,6 @@ void write_object(tcp::socket& sock, const T& val)
 
 }
 
-
+#endif /* FLANN_R_COMPAT */
 
 #endif /* MPI_QUERIES_H_ */

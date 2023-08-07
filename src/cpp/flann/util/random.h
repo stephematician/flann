@@ -32,8 +32,9 @@
 #define FLANN_RANDOM_H
 
 #include <algorithm>
-#include <cstdlib>
-#include <cstddef>
+#ifndef FLANN_R_COMPAT
+  #include <cstdlib> /* srand, rand */
+#endif /* FLANN_R_COMPAT */
 #include <random>
 #include <vector>
 
@@ -41,7 +42,7 @@
 
 namespace flann
 {
-
+#ifndef FLANN_R_COMPAT
 /**
  * Seeds the random number generator
  *  @param seed Random seed
@@ -72,6 +73,7 @@ inline int rand_int(int high = RAND_MAX, int low = 0)
 {
   return low + (int)(double(high - low) * (std::rand() / (RAND_MAX + 1.0)));
 }
+#endif /* FLANN_R_COMPAT */
 
 
 /**

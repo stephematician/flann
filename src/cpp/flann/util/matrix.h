@@ -31,9 +31,12 @@
 #ifndef FLANN_DATASET_H_
 #define FLANN_DATASET_H_
 
+#include <cstddef> /* NULL, size_t */
+
 #include "flann/general.h"
-#include "flann/util/serialization.h"
-#include <stdio.h>
+#ifndef FLANN_NO_SERIALIZATION
+  #include "flann/util/serialization.h"
+#endif /* FLANN_NO_SERIALIZATION */
 
 namespace flann
 {
@@ -76,6 +79,7 @@ public:
 protected:
     uchar* data;
 
+#ifndef FLANN_NO_SERIALIZATION
     template<typename Archive>
     void serialize(Archive& ar)
     {
@@ -89,6 +93,7 @@ protected:
     	ar & serialization::make_binary_object(data, rows*stride);
     }
     friend struct serialization::access;
+#endif /* FLANN_NO_SERIALIZATION */
 };
 
 

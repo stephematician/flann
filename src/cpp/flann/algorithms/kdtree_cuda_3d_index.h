@@ -154,14 +154,14 @@ public:
     	return dataset_[id];
     }
 
-    void saveIndex(FILE* stream)
+    void saveIndex(std::FILE* stream)
     {
         throw FLANNException( "Index saving not implemented!" );
 
     }
 
 
-    void loadIndex(FILE* stream)
+    void loadIndex(std::FILE* stream)
     {
         throw FLANNException( "Index loading not implemented!" );
     }

@@ -28,7 +28,10 @@
 
 #define FLANN_FIRST_MATCH
 
-#include "flann.h"
+#include <stdexcept>
+
+#include "flann/flann.h"
+
 
 
 struct FLANNParameters DEFAULT_FLANN_PARAMETERS = {
@@ -55,9 +58,11 @@ flann::IndexParams create_parameters(FLANNParameters* p)
     params["cb_index"] = p->cb_index;
     params["eps"] = p->eps;
 
+#ifndef FLANN_ONLY_SINGLE_KDTREE
     if (p->algorithm == FLANN_INDEX_KDTREE) {
         params["trees"] = p->trees;
     }
+#endif /* FLANN_ONLY_SINGLE_KDTREE */
 
     if (p->algorithm == FLANN_INDEX_KDTREE_SINGLE) {
         params["trees"] = p->trees;
@@ -70,6 +75,7 @@ flann::IndexParams create_parameters(FLANNParameters* p)
     }
 #endif
 
+#ifndef FLANN_ONLY_SINGLE_KDTREE
     if (p->algorithm == FLANN_INDEX_KMEANS) {
         params["branching"] = p->branching;
         params["iterations"] = p->iterations;
@@ -95,6 +101,7 @@ flann::IndexParams create_parameters(FLANNParameters* p)
         params["key_size"] = p->key_size_;
         params["multi_probe_level"] = p->multi_probe_level_;
     }
+#endif /* FLANN_ONLY_SINGLE_KDTREE */
 
     params["log_level"] = p->log_level;
     params["random_seed"] = p->random_seed;
@@ -170,7 +177,11 @@ void init_flann_parameters(FLANNParameters* p)
     if (p != NULL) {
         flann_log_verbosity(p->log_level);
         if (p->random_seed>0) {
+#ifndef FLANN_R_COMPAT
             seed_random(p->random_seed);
+#else
+            throw std::invalid_argument("No support for random_seed != 0 when built with -DFLANN_R_COMPAT");
+#endif /* FLANN_R_COMPAT */
         }
     }
 }
@@ -215,6 +226,7 @@ flann_index_t __flann_build_index(typename Distance::ElementType* dataset, int r
         Index<Distance>* index = new Index<Distance>(Matrix<ElementType>(dataset,rows,cols), params, d);
         index->buildIndex();
 
+#ifndef FLANN_ONLY_SINGLE_KDTREE
         if (flann_params->algorithm==FLANN_INDEX_AUTOTUNED) {
             IndexParams params = index->getParameters();
             update_flann_parameters(params,flann_params);
@@ -224,6 +236,9 @@ flann_index_t __flann_build_index(typename Distance::ElementType* dataset, int r
             flann_params->eps = search_params.eps;
             flann_params->cb_index = get_param<float>(params,"cb_index",0.0);
         }
+#else
+        throw std::invalid_argument("No support for FLANN_INDEX_AUTOTUNED when built with -DFLANN_ONLY_SINGLE_KDTREE");
+#endif /* FLANN_ONLY_SINGLE_KDTREE */
 
         return index;
     }
@@ -714,6 +729,7 @@ int flann_used_memory_int(flann_index_t index_ptr)
     return _flann_used_memory<int>(index_ptr);
 }
 
+#ifndef FLANN_NO_SERIALIZATION
 template<typename Distance>
 int __flann_save_index(flann_index_t index_ptr, char* filename)
 {
@@ -858,6 +874,7 @@ flann_index_t flann_load_index_int(char* filename, int* dataset, int rows, int c
 {
     return _flann_load_index<int>(filename, dataset, rows, cols);
 }
+#endif /* FLANN_NO_SERIALIZATION */
 
 
 

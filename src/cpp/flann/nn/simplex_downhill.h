@@ -31,6 +31,10 @@
 #ifndef FLANN_SIMPLEX_DOWNHILL_H_
 #define FLANN_SIMPLEX_DOWNHILL_H_
 
+#include <algorithm>
+#include <cassert>
+#include <cstddef> /* NULL */
+
 namespace flann
 {
 
@@ -48,9 +52,9 @@ void addValue(int pos, float val, float* vals, T* point, T* points, int n)
     // bubble down
     int j=pos;
     while (j>0 && vals[j]<vals[j-1]) {
-        swap(vals[j],vals[j-1]);
+        std::swap(vals[j],vals[j-1]);
         for (int i=0; i<n; ++i) {
-            swap(points[j*n+i],points[(j-1)*n+i]);
+            std::swap(points[j*n+i],points[(j-1)*n+i]);
         }
         --j;
     }

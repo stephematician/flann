@@ -31,9 +31,8 @@
 #ifndef FLANN_INDEX_TESTING_H_
 #define FLANN_INDEX_TESTING_H_
 
-#include <cstring>
-#include <cassert>
 #include <cmath>
+#include <cstddef>
 
 #include "flann/util/matrix.h"
 #include "flann/algorithms/nn_index.h"
@@ -190,14 +189,14 @@ float test_index_precision(Index& index, const Matrix<typename Distance::Element
 
     int cx;
     float realPrecision;
-    if (fabs(p2-precision)>SEARCH_EPS) {
+    if (std::fabs(p2-precision)>SEARCH_EPS) {
         Logger::info("Start linear estimation\n");
         // after we got to values in the vecinity of the desired precision
         // use linear approximation get a better estimation
 
         cx = (c1+c2)/2;
         realPrecision = search_with_ground_truth(index, inputData, testData, matches, nn, cx, time, dist, distance, skipMatches);
-        while (fabs(realPrecision-precision)>SEARCH_EPS) {
+        while (std::fabs(realPrecision-precision)>SEARCH_EPS) {
 
             if (realPrecision<precision) {
                 c1 = cx;
@@ -282,14 +281,14 @@ void test_index_precisions(Index& index, const Matrix<typename Distance::Element
 
         int cx;
         float realPrecision;
-        if (fabs(p2-precision)>SEARCH_EPS) {
+        if (std::fabs(p2-precision)>SEARCH_EPS) {
             Logger::info("Start linear estimation\n");
             // after we got to values in the vecinity of the desired precision
             // use linear approximation get a better estimation
 
             cx = (c1+c2)/2;
             realPrecision = search_with_ground_truth(index, inputData, testData, matches, nn, cx, time, dist, distance, skipMatches);
-            while (fabs(realPrecision-precision)>SEARCH_EPS) {
+            while (std::fabs(realPrecision-precision)>SEARCH_EPS) {
 
                 if (realPrecision<precision) {
                     c1 = cx;

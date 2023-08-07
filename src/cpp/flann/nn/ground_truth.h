@@ -31,6 +31,9 @@
 #ifndef FLANN_GROUND_TRUTH_H_
 #define FLANN_GROUND_TRUTH_H_
 
+#include <algorithm>
+#include <cstddef> /* size_t */
+
 #include "flann/algorithms/dist.h"
 #include "flann/util/matrix.h"
 

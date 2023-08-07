@@ -30,17 +30,26 @@
 #ifndef FLANN_AUTOTUNED_INDEX_H_
 #define FLANN_AUTOTUNED_INDEX_H_
 
+#ifndef FLANN_ONLY_SINGLE_KDTREE
+
+#include <algorithm>
+#include <cstddef>
+#ifndef FLANN_NO_SERIALIZATION
+  #include <cstdio>
+#endif /* FLANN_NO_SERIALIZATION */
+#include <vector>
+
 #include "flann/general.h"
 #include "flann/algorithms/nn_index.h"
-#include "flann/nn/ground_truth.h"
-#include "flann/nn/index_testing.h"
-#include "flann/util/sampling.h"
 #include "flann/algorithms/kdtree_index.h"
 #include "flann/algorithms/kdtree_single_index.h"
 #include "flann/algorithms/kmeans_index.h"
 #include "flann/algorithms/composite_index.h"
 #include "flann/algorithms/linear_index.h"
+#include "flann/nn/ground_truth.h"
+#include "flann/nn/index_testing.h"
 #include "flann/util/logger.h"
+#include "flann/util/sampling.h"
 
 
 namespace flann
@@ -175,7 +184,8 @@ public:
         }
     }
 
-    
+
+#ifndef FLANN_NO_SERIALIZATION 
     template<typename Archive>
     void serialize(Archive& ar)
     {
@@ -206,7 +216,7 @@ public:
     	}
     }
 
-    void saveIndex(FILE* stream)
+    void saveIndex(std::FILE* stream)
     {
         {
             serialization::SaveArchive sa(stream);
@@ -216,7 +226,7 @@ public:
     	bestIndex_->saveIndex(stream);
     }
 
-    void loadIndex(FILE* stream)
+    void loadIndex(std::FILE* stream)
     {
         {
             serialization::LoadArchive la(stream);
@@ -228,6 +238,7 @@ public:
         bestIndex_ = create_index_by_type<Distance>((flann_algorithm_t)index_type, dataset_, params, distance_);
         bestIndex_->loadIndex(stream);
     }
+#endif /* FLANN_NO_SERIALIZATION  */
 
     int knnSearch(const Matrix<ElementType>& queries,
             Matrix<size_t>& indices,
@@ -759,5 +770,7 @@ private:
     USING_BASECLASS_SYMBOLS
 };
 }
+
+#endif /* FLANN_ONLY_SINGLE_KDTREE */
 
 #endif /* FLANN_AUTOTUNED_INDEX_H_ */

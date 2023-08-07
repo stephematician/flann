@@ -29,9 +29,11 @@
 #ifndef FLANN_SAVING_H_
 #define FLANN_SAVING_H_
 
+#ifndef FLANN_NO_SERIALIZATION
+
+#include <cstdio>
 #include <cstring>
 #include <vector>
-#include <stdio.h>
 
 #include "flann/general.h"
 #include "flann/util/serialization.h"
@@ -54,10 +56,10 @@ struct IndexHeader
 
     IndexHeader()
 	{
-        memset(h.signature, 0, sizeof(h.signature));
-        strcpy(h.signature, FLANN_SIGNATURE_);
-        memset(h.version, 0, sizeof(h.version));
-        strcpy(h.version, FLANN_VERSION_);
+        std::memset(h.signature, 0, sizeof(h.signature));
+        std::strcpy(h.signature, FLANN_SIGNATURE_);
+        std::memset(h.version, 0, sizeof(h.version));
+        std::strcpy(h.version, FLANN_VERSION_);
 
         h.compression = 0;
         h.first_block_size = 0;
@@ -86,7 +88,7 @@ private:
  * @param index - The index to save
  */
 template<typename Index>
-void save_header(FILE* stream, const Index& index)
+void save_header(std::FILE* stream, const Index& index)
 {
     IndexHeader header;
     header.h.data_type = flann_datatype_value<typename Index::ElementType>::value;
@@ -94,7 +96,7 @@ void save_header(FILE* stream, const Index& index)
     header.h.rows = index.size();
     header.h.cols = index.veclen();
 
-    fwrite(&header, sizeof(header),1,stream);
+    std::fwrite(&header, sizeof(header),1,stream);
 }
 
 
@@ -103,18 +105,18 @@ void save_header(FILE* stream, const Index& index)
  * @param stream - Stream to load from
  * @return Index header
  */
-inline IndexHeader load_header(FILE* stream)
+inline IndexHeader load_header(std::FILE* stream)
 {
     IndexHeader header;
-    int read_size = fread(&header,sizeof(header),1,stream);
+    int read_size = std::fread(&header,sizeof(header),1,stream);
 
     if (read_size != 1) {
         throw FLANNException("Invalid index file, cannot read");
     }
 
-    if (strncmp(header.h.signature,
+    if (std::strncmp(header.h.signature,
                 FLANN_SIGNATURE_,
-                strlen(FLANN_SIGNATURE_) - strlen("v0.0")) != 0) {
+                std::strlen(FLANN_SIGNATURE_) - std::strlen("v0.0")) != 0) {
         throw FLANNException("Invalid index file, wrong signature");
     }
 
@@ -131,5 +133,7 @@ ENUM_SERIALIZER(flann_datatype_t);
 }
 
 }
+
+#endif /* FLANN_NO_SERIALIZATION */
 
 #endif /* FLANN_SAVING_H_ */

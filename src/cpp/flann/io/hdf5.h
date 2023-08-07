@@ -30,6 +30,8 @@
 #ifndef FLANN_HDF5_H_
 #define FLANN_HDF5_H_
 
+#ifndef FLANN_NO_SERIALIZATION
+
 #include <hdf5.h>
 
 #include "flann/util/matrix.h"
@@ -227,5 +229,7 @@ void load_from_file(flann::Matrix<T>& dataset, const std::string& filename, cons
 }
 #endif // HAVE_MPI
 } // namespace flann::mpi
+
+#endif /* FLANN_NO_SERIALIZATION */
 
 #endif /* FLANN_HDF5_H_ */

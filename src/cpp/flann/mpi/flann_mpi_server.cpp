@@ -1,7 +1,13 @@
+#ifndef FLANN_R_COMPAT
+
+#include <cstdio>
+#include <cstdlib>
+#include <iostream>
+#include <stdexcept>
+
 #include <boost/mpi.hpp>
-#include <flann/mpi/server.h>
-#include <stdio.h>
-#include <time.h>
+
+#include "flann/mpi/server.h"
 
 int main(int argc, char* argv[])
 {
@@ -24,3 +30,4 @@ int main(int argc, char* argv[])
 	return 0;
 }
 
+#endif /* FLANN_R_COMPAT */

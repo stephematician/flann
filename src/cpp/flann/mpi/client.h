@@ -30,11 +30,14 @@
 #ifndef MPI_CLIENT_H_
 #define MPI_CLIENT_H_
 
+#ifndef FLANN_R_COMPAT
+
 #include <cstdlib>
 #include <boost/asio.hpp>
-#include <flann/util/matrix.h>
-#include <flann/util/params.h>
-#include "queries.h"
+
+#include "flann/util/matrix.h"
+#include "flann/util/params.h"
+#include "flann/mpi/queries.h"
 
 namespace flann {
 namespace mpi {
@@ -85,5 +88,7 @@ private:
 
 } //namespace mpi
 } // namespace flann
+
+#endif /* FLANN_R_COMPAT */
 
 #endif // MPI_CLIENT_H_

@@ -30,11 +30,14 @@
 #ifndef FLANN_PARAMS_H_
 #define FLANN_PARAMS_H_
 
+#ifndef FLANN_R_COMPAT
+  #include <iostream>
+#endif
+#include <map>
+#include <string>
+
 #include "any.h"
 #include "flann/general.h"
-#include <iostream>
-#include <map>
-
 
 namespace flann
 {
@@ -117,19 +120,23 @@ T get_param(const IndexParams& params, std::string name)
 
 inline void print_params(const IndexParams& params)
 {
+#ifndef FLANN_R_COMPAT
     IndexParams::const_iterator it;
 
     for(it=params.begin(); it!=params.end(); ++it) {
         std::cout << it->first << " : " << it->second << std::endl;
     }
+#endif /* FLANN_R_COMPAT */
 }
 
 inline void print_params(const SearchParams& params)
 {
+#ifndef FLANN_R_COMPAT
 	std::cout << "checks : " << params.checks << std::endl;
 	std::cout << "eps : " << params.eps << std::endl;
 	std::cout << "sorted : " << params.sorted << std::endl;
 	std::cout << "max_neighbors : " << params.max_neighbors << std::endl;
+#endif /* FLANN_R_COMPAT */
 }
 
 

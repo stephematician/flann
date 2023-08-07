@@ -31,10 +31,11 @@
 #ifndef FLANN_GENERAL_H_
 #define FLANN_GENERAL_H_
 
-#include "defines.h"
+#include <climits> /* LLONG_MAX and ULLONG_MAX */
 #include <stdexcept>
-#include <cassert>
-#include <limits.h>
+#include <string>
+
+#include "flann/defines.h"
 
 namespace flann
 {

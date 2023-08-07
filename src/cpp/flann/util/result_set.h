@@ -32,8 +32,7 @@
 #define FLANN_RESULTSET_H
 
 #include <algorithm>
-#include <cstring>
-#include <iostream>
+#include <cstddef>
 #include <limits>
 #include <set>
 #include <vector>

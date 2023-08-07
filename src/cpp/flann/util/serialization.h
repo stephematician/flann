@@ -1,11 +1,16 @@
 #ifndef SERIALIZATION_H_
 #define SERIALIZATION_H_
 
-#include <vector>
-#include <map>
+#ifndef FLANN_NO_SERIALIZATION
+
+#include <cassert>
+#include <cstddef>
 #include <cstdlib>
 #include <cstring>
-#include <stdio.h>
+#include <cstdio>
+#include <map>
+#include <vector>
+
 #include <lz4.h>
 #include <lz4hc.h>
 
@@ -380,7 +385,7 @@ class SaveArchive : public OutputArchive<SaveArchive>
      * https://github.com/Cyan4973/lz4/blob/master/examples/blockStreaming_doubleBuffer.c
      */
     
-    FILE* stream_;
+    std::FILE* stream_;
     bool own_stream_;
     char *buffer_;
     size_t offset_;
@@ -395,8 +400,8 @@ class SaveArchive : public OutputArchive<SaveArchive>
     {
         // Alloc the space for both buffer blocks (each compressed block
         // references the previous)
-        buffer_ = buffer_blocks_ = (char *)malloc(BLOCK_BYTES*2);
-        compressed_buffer_ = (char *)malloc(LZ4_COMPRESSBOUND(BLOCK_BYTES) + sizeof(size_t));
+        buffer_ = buffer_blocks_ = (char *)std::malloc(BLOCK_BYTES*2);
+        compressed_buffer_ = (char *)std::malloc(LZ4_COMPRESSBOUND(BLOCK_BYTES) + sizeof(size_t));
         if (buffer_ == NULL || compressed_buffer_ == NULL) {
             throw FLANNException("Error allocating compression buffer");
         }
@@ -417,7 +422,7 @@ class SaveArchive : public OutputArchive<SaveArchive>
             // Copy & set the header
             IndexHeaderStruct *head = (IndexHeaderStruct *)buffer_;
             size_t headSz = sizeof(IndexHeaderStruct);
-            
+
             assert(head->compression == 0);
             head->compression = 1; // Bool now, enum later
         
@@ -432,7 +437,7 @@ class SaveArchive : public OutputArchive<SaveArchive>
             
             // Handle header
             head->first_block_size = compSz;
-            memcpy(compressed_buffer_, buffer_, headSz);
+            std::memcpy(compressed_buffer_, buffer_, headSz);
             
             compSz += headSz;
             first_block_ = false;
@@ -449,12 +454,12 @@ class SaveArchive : public OutputArchive<SaveArchive>
             }
             
             // Save the size of the compressed block as the header
-            memcpy(compressed_buffer_, &compSz, headSz);
+            std::memcpy(compressed_buffer_, &compSz, headSz);
             compSz += headSz;
         }
         
         // Write the compressed buffer
-        fwrite(compressed_buffer_, compSz, 1, stream_);
+        std::fwrite(compressed_buffer_, compSz, 1, stream_);
         
         // Switch the buffer to the *other* block
         if (buffer_ == buffer_blocks_)
@@ -467,26 +472,26 @@ class SaveArchive : public OutputArchive<SaveArchive>
     void endBlock()
     {
         // Cleanup memory
-        free(buffer_blocks_);
+        std::free(buffer_blocks_);
         buffer_blocks_ = NULL;
         buffer_ = NULL;
-        free(compressed_buffer_);
+        std::free(compressed_buffer_);
         compressed_buffer_ = NULL;
         
         // Write a '0' size for next block
         size_t z = 0;
-        fwrite(&z, sizeof(z), 1, stream_);
+        std::fwrite(&z, sizeof(z), 1, stream_);
     }
 
 public:
     SaveArchive(const char* filename)
     {
-        stream_ = fopen(filename, "wb");
+        stream_ = std::fopen(filename, "wb");
         own_stream_ = true;
         initBlock();
     }
 
-    SaveArchive(FILE* stream) : stream_(stream), own_stream_(false)
+    SaveArchive(std::FILE* stream) : stream_(stream), own_stream_(false)
     {
         initBlock();
     }
@@ -496,11 +501,11 @@ public:
         flushBlock();
         endBlock();
         if (buffer_) {
-            free(buffer_);
+            std::free(buffer_);
             buffer_ = NULL;
         }
     	if (own_stream_) {
-    		fclose(stream_);
+    		std::fclose(stream_);
     	}
     }
 
@@ -510,7 +515,7 @@ public:
         assert(sizeof(val) < BLOCK_BYTES);
         if (offset_+sizeof(val) > BLOCK_BYTES)
             flushBlock();
-        memcpy(buffer_+offset_, &val, sizeof(val));
+        std::memcpy(buffer_+offset_, &val, sizeof(val));
         offset_ += sizeof(val);
     }
 
@@ -518,7 +523,7 @@ public:
     void save(T* const& val)
     {
     	// don't save pointers
-        //fwrite(&val, sizeof(val), 1, handle_);
+        //std::fwrite(&val, sizeof(val), 1, handle_);
     }
     
     template<typename T>
@@ -529,7 +534,7 @@ public:
             flushBlock();
             
             // Save large chunk
-            memcpy(buffer_, ptr, BLOCK_BYTES);
+            std::memcpy(buffer_, ptr, BLOCK_BYTES);
             offset_ += BLOCK_BYTES;
             ptr = ((char *)ptr) + BLOCK_BYTES;
             size -= BLOCK_BYTES;
@@ -540,7 +545,7 @@ public:
             flushBlock();
         
         // Copy out requested data
-        memcpy(buffer_+offset_, ptr, size);
+        std::memcpy(buffer_+offset_, ptr, size);
         offset_ += size;
     }
 
@@ -554,7 +559,7 @@ class LoadArchive : public InputArchive<LoadArchive>
      * https://github.com/Cyan4973/lz4/blob/master/examples/blockStreaming_doubleBuffer.c
      */
     
-    FILE* stream_;
+    std::FILE* stream_;
     bool own_stream_;
     char *buffer_;
     char *ptr_;
@@ -565,24 +570,24 @@ class LoadArchive : public InputArchive<LoadArchive>
     LZ4_streamDecode_t* lz4StreamDecode;
     size_t block_sz_;
 
-    void decompressAndLoadV10(FILE* stream)
+    void decompressAndLoadV10(std::FILE* stream)
     {
         buffer_ = NULL;
         
         // Find file size
-        size_t pos = ftell(stream);
-        fseek(stream, 0, SEEK_END);
-        size_t fileSize = ftell(stream)-pos;
-        fseek(stream, pos, SEEK_SET);
+        size_t pos = std::ftell(stream);
+        std::fseek(stream, 0, SEEK_END);
+        size_t fileSize = std::ftell(stream)-pos;
+        std::fseek(stream, pos, SEEK_SET);
         size_t headSz = sizeof(IndexHeaderStruct);
 
         // Read the (compressed) file to a buffer
-        char *compBuffer = (char *)malloc(fileSize);
+        char *compBuffer = (char *)std::malloc(fileSize);
         if (compBuffer == NULL) {
             throw FLANNException("Error allocating file buffer space");
         }
-        if (fread(compBuffer, fileSize, 1, stream) != 1) {
-            free(compBuffer);
+        if (std::fread(compBuffer, fileSize, 1, stream) != 1) {
+            std::free(compBuffer);
             throw FLANNException("Invalid index file, cannot read from disk (compressed)");
         }
 
@@ -595,14 +600,14 @@ class LoadArchive : public InputArchive<LoadArchive>
         
         // Check for compression type
         if (head->compression != 1) {
-            free(compBuffer);
+            std::free(compBuffer);
             throw FLANNException("Compression type not supported");
         }
         
         // Allocate a decompressed buffer
-        ptr_ = buffer_ = (char *)malloc(uncompressedSz+headSz);
+        ptr_ = buffer_ = (char *)std::malloc(uncompressedSz+headSz);
         if (buffer_ == NULL) {
-            free(compBuffer);
+            std::free(compBuffer);
             throw FLANNException("Error (re)allocating decompression buffer");
         }
         
@@ -614,51 +619,51 @@ class LoadArchive : public InputArchive<LoadArchive>
         
         // Check if the decompression was the expected size.
         if (usedSz != uncompressedSz) {
-            free(compBuffer);
+            std::free(compBuffer);
             throw FLANNException("Unexpected decompression size");
         }
         
         // Copy header data
-        memcpy(buffer_, compBuffer, headSz);
-        free(compBuffer);
+        std::memcpy(buffer_, compBuffer, headSz);
+        std::free(compBuffer);
         
         // Put the file pointer at the end of the data we've read
         if (compressedSz+headSz+pos != fileSize)
-            fseek(stream, compressedSz+headSz+pos, SEEK_SET);
+            std::fseek(stream, compressedSz+headSz+pos, SEEK_SET);
         block_sz_ = uncompressedSz+headSz;
     }
     
     void initBlock(FILE *stream)
     {
-        size_t pos = ftell(stream);
+        size_t pos = std::ftell(stream);
         buffer_ = NULL;
         buffer_blocks_ = NULL;
         compressed_buffer_ = NULL;
         size_t headSz = sizeof(IndexHeaderStruct);
         
         // Read the file header to a buffer
-        IndexHeaderStruct *head = (IndexHeaderStruct *)malloc(headSz);
+        IndexHeaderStruct *head = (IndexHeaderStruct *)std::malloc(headSz);
         if (head == NULL) {
             throw FLANNException("Error allocating header buffer space");
         }
-        if (fread(head, headSz, 1, stream) != 1) {
-            free(head);
+        if (std::fread(head, headSz, 1, stream) != 1) {
+            std::free(head);
             throw FLANNException("Invalid index file, cannot read from disk (header)");
         }
         
         // Backward compatability
         if (head->signature[13] == '1' && head->signature[15] == '0') {
-            free(head);
-            fseek(stream, pos, SEEK_SET);
+            std::free(head);
+            std::fseek(stream, pos, SEEK_SET);
             return decompressAndLoadV10(stream);
         }
         
         // Alloc the space for both buffer blocks (each block
         // references the previous)
-        buffer_ = buffer_blocks_ = (char *)malloc(BLOCK_BYTES*2);
-        compressed_buffer_ = (char *)malloc(LZ4_COMPRESSBOUND(BLOCK_BYTES));
+        buffer_ = buffer_blocks_ = (char *)std::malloc(BLOCK_BYTES*2);
+        compressed_buffer_ = (char *)std::malloc(LZ4_COMPRESSBOUND(BLOCK_BYTES));
         if (buffer_ == NULL || compressed_buffer_ == NULL) {
-            free(head);
+            std::free(head);
             throw FLANNException("Error allocating compression buffer");
         }
         
@@ -667,21 +672,21 @@ class LoadArchive : public InputArchive<LoadArchive>
         LZ4_setStreamDecode(lz4StreamDecode, NULL, 0);
         
         // Read first block
-        memcpy(buffer_, head, headSz);
+        std::memcpy(buffer_, head, headSz);
         loadBlock(buffer_+headSz, head->first_block_size, stream);
         block_sz_ += headSz;
         ptr_ = buffer_;
-        free(head);
+        std::free(head);
     }
 
-    void loadBlock(char* buffer_, size_t compSz, FILE* stream)
+    void loadBlock(char* buffer_, size_t compSz, std::FILE* stream)
     {
         if(compSz >= LZ4_COMPRESSBOUND(BLOCK_BYTES)) {
             throw FLANNException("Requested block size too large");
         }
         
         // Read the block into the compressed buffer
-        if (fread(compressed_buffer_, compSz, 1, stream) != 1) {
+        if (std::fread(compressed_buffer_, compSz, 1, stream) != 1) {
             throw FLANNException("Invalid index file, cannot read from disk (block)");
         }
         
@@ -708,7 +713,7 @@ class LoadArchive : public InputArchive<LoadArchive>
         
         // Find the size of the next block
         size_t cmpSz = 0;
-        size_t readCnt = fread(&cmpSz, sizeof(cmpSz), 1, stream_);
+        size_t readCnt = std::fread(&cmpSz, sizeof(cmpSz), 1, stream_);
         if(cmpSz <= 0 || readCnt != 1) {
             throw FLANNException("Requested to read next block past end of file");
         }
@@ -724,7 +729,7 @@ class LoadArchive : public InputArchive<LoadArchive>
         if (buffer_blocks_ != NULL) {
             // Read the last '0' in the file
             size_t zero = 1;
-            if (fread(&zero, sizeof(zero), 1, stream_) != 1) {
+            if (std::fread(&zero, sizeof(zero), 1, stream_) != 1) {
                 throw FLANNException("Invalid index file, cannot read from disk (end)");
             }
             if (zero != 0) {
@@ -734,11 +739,11 @@ class LoadArchive : public InputArchive<LoadArchive>
         
         // Free resources
         if (buffer_blocks_ != NULL) {
-            free(buffer_blocks_);
+            std::free(buffer_blocks_);
             buffer_blocks_ = NULL;
         }
         if (compressed_buffer_ != NULL) {
-            free(compressed_buffer_);
+            std::free(compressed_buffer_);
             compressed_buffer_ = NULL;
         }
         ptr_ = NULL;
@@ -748,13 +753,13 @@ public:
     LoadArchive(const char* filename)
     {
         // Open the file
-        stream_ = fopen(filename, "rb");
+        stream_ = std::fopen(filename, "rb");
         own_stream_ = true;
 
         initBlock(stream_);
     }
 
-    LoadArchive(FILE* stream)
+    LoadArchive(std::FILE* stream)
     {
         stream_ = stream;
         own_stream_ = false;
@@ -766,7 +771,7 @@ public:
     {
         endBlock();
     	if (own_stream_) {
-    		fclose(stream_);
+    		std::fclose(stream_);
     	}
     }
 
@@ -774,7 +779,7 @@ public:
     void load(T& val)
     {
         preparePtr(sizeof(val));
-        memcpy(&val, ptr_, sizeof(val));
+        std::memcpy(&val, ptr_, sizeof(val));
         ptr_ += sizeof(val);
     }
 
@@ -782,7 +787,7 @@ public:
     void load(T*& val)
     {
     	// don't load pointers
-        //fread(&val, sizeof(val), 1, handle_);
+        //std::fread(&val, sizeof(val), 1, handle_);
     }
 
     template<typename T>
@@ -793,7 +798,7 @@ public:
             preparePtr(BLOCK_BYTES);
             
             // Load large chunk
-            memcpy(ptr, ptr_, BLOCK_BYTES);
+            std::memcpy(ptr, ptr_, BLOCK_BYTES);
             ptr_ += BLOCK_BYTES;
             ptr = ((char *)ptr) + BLOCK_BYTES;
             size -= BLOCK_BYTES;
@@ -803,11 +808,14 @@ public:
         preparePtr(size);
         
         // Load the data
-        memcpy(ptr, ptr_, size);
+        std::memcpy(ptr, ptr_, size);
         ptr_ += size;
     }
 };
 
 } // namespace serialization
 } // namespace flann
+
+#endif /* FLANN_NO_SERIALIZATION */
+
 #endif // SERIALIZATION_H_

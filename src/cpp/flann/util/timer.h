@@ -31,7 +31,7 @@
 #ifndef FLANN_TIMER_H
 #define FLANN_TIMER_H
 
-#include <time.h>
+#include <ctime>
 
 
 namespace flann
@@ -44,7 +44,7 @@ namespace flann
  */
 class StartStopTimer
 {
-    clock_t startTime;
+    std::clock_t startTime;
 
 public:
     /**
@@ -66,7 +66,7 @@ public:
      */
     void start()
     {
-        startTime = clock();
+        startTime = std::clock();
     }
 
     /**
@@ -74,7 +74,7 @@ public:
      */
     double stop()
     {
-        clock_t stopTime = clock();
+        std::clock_t stopTime = std::clock();
         value += ( (double)stopTime - startTime) / CLOCKS_PER_SEC;
         
         return value;

@@ -35,21 +35,24 @@
 #ifndef FLANN_LSH_INDEX_H_
 #define FLANN_LSH_INDEX_H_
 
+#ifndef FLANN_ONLY_SINGLE_KDTREE
+
 #include <algorithm>
 #include <cassert>
-#include <cstring>
-#include <map>
+#include <cstddef> /* size_t */
+#ifndef FLANN_R_COMPAT
+  #include <cstdio>
+#endif /* FLANN_R_COMPAT */
+#include <limits>
+#include <utility>
 #include <vector>
 
 #include "flann/general.h"
 #include "flann/algorithms/nn_index.h"
-#include "flann/util/matrix.h"
-#include "flann/util/result_set.h"
-#include "flann/util/heap.h"
 #include "flann/util/lsh_table.h"
-#include "flann/util/allocator.h"
-#include "flann/util/random.h"
-#include "flann/util/saving.h"
+#ifndef FLANN_NO_SERIALIZATION
+  #include "flann/util/saving.h"
+#endif /* FLANN_NO_SERIALIZATION */
 
 namespace flann
 {
@@ -170,6 +173,7 @@ public:
     }
 
 
+#ifndef FLANN_NO_SERIALIZATION
     template<typename Archive>
     void serialize(Archive& ar)
     {
@@ -192,17 +196,18 @@ public:
     	}
     }
 
-    void saveIndex(FILE* stream)
+    void saveIndex(std::FILE* stream)
     {
     	serialization::SaveArchive sa(stream);
     	sa & *this;
     }
 
-    void loadIndex(FILE* stream)
+    void loadIndex(std::FILE* stream)
     {
     	serialization::LoadArchive la(stream);
     	la & *this;
     }
+#endif /* FLANN_NO_SERIALIZATION */
 
     /**
      * Computes the index memory usage
@@ -544,5 +549,7 @@ private:
     USING_BASECLASS_SYMBOLS
 };
 }
+
+#endif /* FLANN_ONLY_SINGLE_KDTREE */
 
 #endif //FLANN_LSH_INDEX_H_

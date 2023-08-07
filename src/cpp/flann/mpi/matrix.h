@@ -30,13 +30,16 @@
 #ifndef MPI_MATRIX_H_
 #define MPI_MATRIX_H_
 
-#include <flann/util/matrix.h>
+#ifndef FLANN_R_COMPAT
+
 #include <boost/serialization/array.hpp>
 
+#include "flann/util/matrix.h"
 
 namespace boost {
 namespace serialization {
 
+#ifndef FLANN_NO_SERIALIZATION
 template<class Archive, class T>
 void serialize(Archive & ar, flann::Matrix<T> & matrix, const unsigned int version)
 {
@@ -47,8 +50,11 @@ void serialize(Archive & ar, flann::Matrix<T> & matrix, const unsigned int versi
     ar & boost::serialization::make_array(matrix.ptr(), matrix.rows*matrix.cols);
 }
 
-}
+#endif /* FLANN_NO_SERIALIZATION */
 }
 
+}
+
+#endif /* FLANN_R_COMPAT */
 
 #endif /* MPI_MATRIX_H_ */

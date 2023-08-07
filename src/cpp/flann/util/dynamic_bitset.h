@@ -41,7 +41,11 @@
 typedef boost::dynamic_bitset<> DynamicBitset;
 #else
 
-#include <limits.h>
+#include <algorithm>
+#include <climits>   /* CHAR_BIT */
+#include <cstddef>   /* size_t */
+#include <vector>
+
 
 namespace flann {
 
@@ -142,6 +146,7 @@ public:
     }
 
 private:
+#ifndef FLANN_NO_SERIALIZATION
     template <typename Archive>
     void serialize(Archive& ar)
     {
@@ -149,6 +154,7 @@ private:
     	ar & bitset_;
     }
     friend struct serialization::access;
+#endif /* FLANN_NO_SERIALIZATION */
 
 private:
     std::vector<size_t> bitset_;

@@ -31,6 +31,11 @@
 #ifndef FLANN_COMPOSITE_INDEX_H_
 #define FLANN_COMPOSITE_INDEX_H_
 
+#ifndef FLANN_ONLY_SINGLE_KDTREE
+
+#include <algorithm> /* swap */
+#include <cstddef> /* size_t */
+
 #include "flann/general.h"
 #include "flann/algorithms/nn_index.h"
 #include "flann/algorithms/kdtree_index.h"
@@ -183,7 +188,7 @@ public:
      * \brief Saves the index to a stream
      * \param stream The stream to save the index to
      */
-    void saveIndex(FILE* stream)
+    void saveIndex(std::FILE* stream)
     {
         kmeans_index_->saveIndex(stream);
         kdtree_index_->saveIndex(stream);
@@ -193,7 +198,7 @@ public:
      * \brief Loads the index from a stream
      * \param stream The stream from which the index is loaded
      */
-    void loadIndex(FILE* stream)
+    void loadIndex(std::FILE* stream)
     {
         kmeans_index_->loadIndex(stream);
         kdtree_index_->loadIndex(stream);
@@ -235,5 +240,7 @@ private:
 };
 
 }
+
+#endif /* FLANN_ONLY_SINGLE_KDTREE */
 
 #endif //FLANN_COMPOSITE_INDEX_H_

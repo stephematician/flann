@@ -1,11 +1,15 @@
-#include <stdio.h>
+#ifndef FLANN_R_COMPAT
+
+#include <algorithm>
+#include <cassert>
+#include <cstdio>
+#include <iostream>
+#include <stdexcept>
 #include <time.h>
 
-#include <cstdlib>
-#include <iostream>
-#include <flann/util/params.h>
-#include <flann/io/hdf5.h>
-#include <flann/mpi/client.h>
+#include "flann/util/params.h"
+#include "flann/io/hdf5.h"
+#include "flann/mpi/client.h"
 
 
 
@@ -15,8 +19,8 @@ timeval start_time_;
 void start_timer(const std::string& message = "")
 {
 	if (!message.empty()) {
-		printf("%s", message.c_str());
-		fflush(stdout);
+		std::printf("%s", message.c_str());
+		std::fflush(stdout);
 	}
     gettimeofday(&start_time_,NULL);
 }
@@ -69,11 +73,11 @@ int main(int argc, char* argv[])
 
 		start_timer("Performing search...\n");
 		index.knnSearch(query, indices, dists, nn, flann::SearchParams(64));
-		printf("Search done (%g seconds)\n", stop_timer());
+		std::printf("Search done (%g seconds)\n", stop_timer());
 
-		printf("Checking results\n");
+		std::printf("Checking results\n");
 		float precision = compute_precision(match, indices);
-		printf("Precision is: %g\n", precision);
+		std::printf("Precision is: %g\n", precision);
 
 	}
 	catch (std::exception& e) {
@@ -83,3 +87,5 @@ int main(int argc, char* argv[])
 	return 0;
 }
 
+
+#endif /* FLANN_R_COMPAT */

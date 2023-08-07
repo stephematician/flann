@@ -31,14 +31,26 @@
 #ifndef FLANN_NNINDEX_H
 #define FLANN_NNINDEX_H
 
+#include <algorithm>
+#include <cassert>
+#include <cstddef> /* NULL, size_t */
+#ifndef FLANN_R_COMPAT
+  #include <cstdio>
+#endif /* FLANN_R_COMPAT */
+#ifndef FLANN_NO_SERIALIZATION
+  #include <cstring> /* strlen, ... */
+#endif /* FLANN_NO_SERIALIZATION */
+#include <limits>
 #include <vector>
 
 #include "flann/general.h"
+#include "flann/util/dynamic_bitset.h"
 #include "flann/util/matrix.h"
 #include "flann/util/params.h"
 #include "flann/util/result_set.h"
-#include "flann/util/dynamic_bitset.h"
-#include "flann/util/saving.h"
+#ifndef FLANN_NO_SERIALIZATION
+  #include "flann/util/saving.h"
+#endif /* FLANN_NO_SERIALIZATION */
 
 namespace flann
 {
@@ -60,10 +72,11 @@ public:
     virtual int usedMemory() const = 0;
 
     virtual IndexParams getParameters() const = 0;
+#ifndef FLANN_NO_SERIALIZATION
+    virtual void loadIndex(std::FILE* stream) = 0;
 
-    virtual void loadIndex(FILE* stream) = 0;
-
-    virtual void saveIndex(FILE* stream) = 0;
+    virtual void saveIndex(std::FILE* stream) = 0;
+#endif /* FLANN_NO_SERIALIZATION */
 };
 
 /**
@@ -220,6 +233,7 @@ public:
     }
 
 
+#ifndef FLANN_NO_SERIALIZATION
     template<typename Archive>
     void serialize(Archive& ar)
     {
@@ -235,9 +249,9 @@ public:
 
     	// sanity checks
     	if (Archive::is_loading::value) {
-            if (strncmp(header.h.signature,
+            if (std::strncmp(header.h.signature,
                         FLANN_SIGNATURE_,
-                        strlen(FLANN_SIGNATURE_) - strlen("v0.0")) != 0) {
+                        std::strlen(FLANN_SIGNATURE_) - std::strlen("v0.0")) != 0) {
     	        throw FLANNException("Invalid index file, wrong signature");
     	    }
 
@@ -288,7 +302,7 @@ public:
     	}
     	ar & removed_count_;
     }
-
+#endif /* FLANN_NO_SERIALIZATION */
 
     /**
      * @brief Perform k-nearest neighbor search

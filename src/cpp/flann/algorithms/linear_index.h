@@ -31,6 +31,14 @@
 #ifndef FLANN_LINEAR_INDEX_H_
 #define FLANN_LINEAR_INDEX_H_
 
+#ifndef FLANN_ONLY_SINGLE_KDTREE
+
+#include <cassert>
+#include <cstddef> /* size_t */
+#ifndef FLANN_R_COMPAT
+  #include <cstdio>
+#endif /* FLANN_R_COMPAT */
+
 #include "flann/general.h"
 #include "flann/algorithms/nn_index.h"
 
@@ -102,6 +110,7 @@ public:
         return 0;
     }
 
+#ifndef FLANN_NO_SERIALIZATION
     template<typename Archive>
     void serialize(Archive& ar)
     {
@@ -114,17 +123,18 @@ public:
     	}
     }
 
-    void saveIndex(FILE* stream)
+    void saveIndex(std::FILE* stream)
     {
     	serialization::SaveArchive sa(stream);
     	sa & *this;
     }
 
-    void loadIndex(FILE* stream)
+    void loadIndex(std::FILE* stream)
     {
     	serialization::LoadArchive la(stream);
     	la & *this;
     }
+#endif /* FLANN_NO_SERIALIZATION */
 
     void findNeighbors(ResultSet<DistanceType>& resultSet, const ElementType* vec, const SearchParams& /*searchParams*/) const
     {
@@ -159,5 +169,7 @@ private:
 };
 
 }
+
+#endif /* FLANN_ONLY_SINGLE_KDTREE */
 
 #endif // FLANN_LINEAR_INDEX_H_

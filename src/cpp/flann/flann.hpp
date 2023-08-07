@@ -32,17 +32,23 @@
 #define FLANN_HPP_
 
 
-#include <vector>
-#include <string>
-#include <cassert>
+#include <algorithm> /* swap */
+#include <cstddef>   /* size_t */
 #include <cstdio>
+#include <stdexcept>
+#include <string>
+#include <vector>
 
 #include "flann/general.h"
 #include "flann/util/matrix.h"
 #include "flann/util/params.h"
-#include "flann/util/saving.h"
+#ifndef FLANN_NO_SERIALIZATION
+  #include "flann/util/saving.h"
+#endif /* FLANN_NO_SERIALIZATION */
+#include "flann/util/logger.h"
 
 #include "flann/algorithms/all_indices.h"
+#include "flann/algorithms/dist.h"
 
 namespace flann
 {
@@ -88,8 +94,10 @@ public:
 
         Matrix<ElementType> features;
         if (index_type == FLANN_INDEX_SAVED) {
+#ifndef FLANN_NO_SERIALIZATION
             nnIndex_ = load_saved_index(features, get_param<std::string>(params,"filename"), distance);
             loaded_ = true;
+#endif /* FLANN_NO_SERIALIZATION */
         }
         else {
         	flann_algorithm_t index_type = get_param<flann_algorithm_t>(params, "algorithm");
@@ -105,8 +113,12 @@ public:
         loaded_ = false;
 
         if (index_type == FLANN_INDEX_SAVED) {
+#ifndef FLANN_NO_SERIALIZATION
             nnIndex_ = load_saved_index(features, get_param<std::string>(params,"filename"), distance);
             loaded_ = true;
+#else
+            throw std::invalid_argument("No support for FLANN_INDEX_SAVED when built with -DFLANN_NO_SERIALIZATION");
+#endif /* FLANN_NO_SERIALIZATION */
         }
         else {
         	flann_algorithm_t index_type = get_param<flann_algorithm_t>(params, "algorithm");
@@ -170,19 +182,21 @@ public:
     	return nnIndex_->getPoint(point_id);
     }
 
+#ifndef FLANN_NO_SERIALIZATION
     /**
      * Save index to file
      * @param filename
      */
     void save(std::string filename)
     {
-        FILE* fout = fopen(filename.c_str(), "wb");
+        std::FILE* fout = std::fopen(filename.c_str(), "wb");
         if (fout == NULL) {
             throw FLANNException("Cannot open file");
         }
         nnIndex_->saveIndex(fout);
-        fclose(fout);
+        std::fclose(fout);
     }
+#endif /* FLANN_NO_SERIALIZATION */
 
     /**
      * \returns number of features in this index.
@@ -368,27 +382,29 @@ public:
     }
 
 private:
+#ifndef FLANN_NO_SERIALIZATION
     IndexType* load_saved_index(const Matrix<ElementType>& dataset, const std::string& filename, Distance distance)
     {
-        FILE* fin = fopen(filename.c_str(), "rb");
+        std::FILE* fin = std::fopen(filename.c_str(), "rb");
         if (fin == NULL) {
             return NULL;
         }
         IndexHeader header = load_header(fin);
         if (header.h.data_type != flann_datatype_value<ElementType>::value) {
-            fclose(fin);
+            std::fclose(fin);
             throw FLANNException("Datatype of saved index is different than of the one to be loaded.");
         }
 
         IndexParams params;
         params["algorithm"] = header.h.index_type;
         IndexType* nnIndex = create_index_by_type<Distance>(header.h.index_type, dataset, params, distance);
-        rewind(fin);
+        std::rewind(fin);
         nnIndex->loadIndex(fin);
-        fclose(fin);
+        std::fclose(fin);
 
         return nnIndex;
     }
+#endif /* FLANN_NO_SERIALIZATION */
 
     void swap( Index& other)
     {
@@ -409,7 +425,7 @@ private:
 
 
 
-
+#ifndef FLANN_ONLY_SINGLE_KDTREE
 /**
  * Performs a hierarchical clustering of the points passed as argument and then takes a cut in the
  * the clustering tree to return a flat clustering.
@@ -431,6 +447,7 @@ int hierarchicalClustering(const Matrix<typename Distance::ElementType>& points,
     int clusterNum = kmeans.getClusterCenters(centers);
     return clusterNum;
 }
+#endif /* FLANN_ONLY_SINGLE_KDTREE */
 
 }
 #endif /* FLANN_HPP_ */

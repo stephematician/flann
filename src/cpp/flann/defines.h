@@ -29,7 +29,7 @@
 #ifndef FLANN_DEFINES_H_
 #define FLANN_DEFINES_H_
 
-#include "config.h"
+#include "flann/config.h"
 
 #ifdef FLANN_EXPORT
 #undef FLANN_EXPORT
@@ -70,6 +70,12 @@
 
 #undef FLANN_ARRAY_LEN
 #define FLANN_ARRAY_LEN(a) (sizeof(a)/sizeof(a[0]))
+
+#ifdef FLANN_R_COMPAT
+#ifndef FLANN_NO_SERIALIZATION
+#error "Require -DFLANN_NO_SERIALIZATION when building with -DFLANN_R_COMPAT"
+#endif
+#endif
 
 #ifdef __cplusplus
 namespace flann {

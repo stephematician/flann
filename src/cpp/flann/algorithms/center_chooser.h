@@ -5,10 +5,19 @@
  *      Author: marius
  */
 
-#ifndef CENTER_CHOOSER_H_
-#define CENTER_CHOOSER_H_
+#ifndef FLANN_CENTER_CHOOSER_H_
+#define FLANN_CENTER_CHOOSER_H_
 
-#include <flann/util/matrix.h>
+#ifndef FLANN_R_COMPAT
+  #include <cassert>
+#else
+  #include <random>
+#endif /* FLANN_R_COMPAT */
+
+#include "flann/util/matrix.h"
+#ifndef FLANN_R_COMPAT
+  #include "flann/util/random.h"
+#endif  /* FLANN_R_COMPAT */
 
 namespace flann
 {
@@ -143,6 +152,10 @@ public:
 
         centers_length = index;
     }
+#ifdef FLANN_R_COMPAT
+    std::random_device rd;
+    std::mt19937 g = std::mt19937(rd());
+#endif
 };
 
 
@@ -168,8 +181,12 @@ public:
     {
         int n = indices_length;
 
+#ifndef FLANN_R_COMPAT
         int rnd = rand_int(n);
         assert(rnd >=0 && rnd < n);
+#else
+        int rnd = std::uniform_int_distribution<>(0, n-1)(g);
+#endif /* FLANN_R_COMPAT */
 
         centers[0] = indices[rnd];
 
@@ -229,8 +246,12 @@ public:
         DistanceType* closestDistSq = new DistanceType[n];
 
         // Choose one random center and set the closestDistSq values
+#ifndef FLANN_R_COMPAT
         int index = rand_int(n);
         assert(index >=0 && index < n);
+#else
+        int index = std::uniform_int_distribution<>(0, n-1)(g);
+#endif /* FLANN_R_COMPAT */
         centers[0] = indices[index];
 
         // Computing distance^2 will have the advantage of even higher probability further to pick new centers
@@ -255,7 +276,11 @@ public:
 
                 // Choose our center - have to be slightly careful to return a valid answer even accounting
                 // for possible rounding errors
+#ifndef FLANN_R_COMPAT
                 double randVal = rand_double(currentPot);
+#else
+                double randVal = std::uniform_real_distribution<>(0.0, currentPot)(g);
+#endif /* FLANN_R_COMPAT */
                 for (index = 0; index < n-1; index++) {
                     if (randVal <= closestDistSq[index]) break;
                     else randVal -= closestDistSq[index];
@@ -326,8 +351,12 @@ public:
         DistanceType* closestDistSq = new DistanceType[n];
 
         // Choose one random center and set the closestDistSq values
+#ifndef FLANN_R_COMPAT
         int index = rand_int(n);
         assert(index >=0 && index < n);
+#else
+        int index = std::uniform_int_distribution<>(0, n-1)(g);
+#endif /* FLANN_R_COMPAT */
         centers[0] = indices[index];
 
         for (int i = 0; i < n; i++) {
@@ -382,4 +411,4 @@ public:
 }
 
 
-#endif /* CENTER_CHOOSER_H_ */
+#endif /* FLANN_CENTER_CHOOSER_H_ */

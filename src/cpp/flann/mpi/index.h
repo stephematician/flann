@@ -30,10 +30,18 @@
 #ifndef FLANN_MPI_HPP_
 #define FLANN_MPI_HPP_
 
+#ifndef FLANN_R_COMPAT
+
+#include <algorithm>
+#include <cstddef> /* size_t */
+#include <string>
+#include <vector>
+
 #include <boost/mpi.hpp>
 #include <boost/serialization/array.hpp>
-#include <flann/flann.hpp>
-#include <flann/io/hdf5.h>
+
+#include "flann/flann.hpp"
+#include "flann/io/hdf5.h"
 
 namespace flann
 {
@@ -46,6 +54,7 @@ struct SearchResults
     flann::Matrix<int> indices;
     flann::Matrix<DistanceType> dists;
 
+#ifndef FLANN_NO_SERIALIZATION
     template<typename Archive>
     void serialize(Archive& ar, const unsigned int version)
     {
@@ -68,6 +77,7 @@ struct SearchResults
             delete[] dists.ptr();
         }
     }
+#endif /* FLANN_NO_SERIALIZATION */
 };
 
 template<typename DistanceType>
@@ -267,5 +277,6 @@ template<typename DistanceType>
 struct is_commutative<flann::mpi::ResultsMerger<DistanceType>, flann::mpi::SearchResults<DistanceType> > : mpl::true_ { };
 } } // end namespace boost::mpi
 
+#endif /* FLANN_R_COMPAT */
 
 #endif /* FLANN_MPI_HPP_ */

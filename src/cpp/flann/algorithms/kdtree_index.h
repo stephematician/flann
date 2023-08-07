@@ -31,23 +31,31 @@
 #ifndef FLANN_KDTREE_INDEX_H_
 #define FLANN_KDTREE_INDEX_H_
 
+#ifndef FLANN_ONLY_SINGLE_KDTREE
+
 #include <algorithm>
-#include <map>
 #include <cassert>
-#include <cstring>
-#include <stdarg.h>
-#include <cmath>
-#include <random>
+#include <cstddef> /* NULL, size_t */
+#ifndef FLANN_R_COMPAT
+  #include <cstdio>
+#endif /* FLANN_R_COMPAT */
+#include <cstring> /* memset */
+#include <cmath> /* abs */
+#ifdef FLANN_R_COMPAT
+  #include <random>
+#endif /* FLANN_R_COMPAT */
+#include <vector>
 
 #include "flann/general.h"
 #include "flann/algorithms/nn_index.h"
-#include "flann/util/dynamic_bitset.h"
-#include "flann/util/matrix.h"
-#include "flann/util/result_set.h"
 #include "flann/util/heap.h"
 #include "flann/util/allocator.h"
-#include "flann/util/random.h"
-#include "flann/util/saving.h"
+#ifndef FLANN_R_COMPAT
+  #include "flann/util/random.h"
+#endif /* FLANN_R_COMPAT */
+#ifndef FLANN_NO_SERIALIZATION
+  #include "flann/util/saving.h"
+#endif
 
 
 namespace flann
@@ -165,6 +173,7 @@ public:
     }
 
 
+#ifndef FLANN_NO_SERIALIZATION
     template<typename Archive>
     void serialize(Archive& ar)
     {
@@ -191,19 +200,20 @@ public:
     }
 
 
-    void saveIndex(FILE* stream)
+    void saveIndex(std::FILE* stream)
     {
     	serialization::SaveArchive sa(stream);
     	sa & *this;
     }
 
 
-    void loadIndex(FILE* stream)
+    void loadIndex(std::FILE* stream)
     {
     	freeIndex();
     	serialization::LoadArchive la(stream);
     	la & *this;
     }
+#endif /* FLANN_NO_SERIALIZATION */
 
     /**
      * Computes the inde memory usage
@@ -266,8 +276,10 @@ protected:
         /* Construct the randomized trees. */
         for (int i = 0; i < trees_; i++) {
             /* Randomize the order of vectors to allow for unbiased sampling. */
+#ifndef FLANN_R_COMPAT
             std::random_device rd;
             std::mt19937 g(rd());
+#endif /* FLANN_R_COMPAT */
             std::shuffle(ind.begin(), ind.end(), g);
             tree_roots_[i] = divideTree(&ind[0], int(size_) );
         }
@@ -317,6 +329,7 @@ private:
 		}
 
     private:
+#ifndef FLANN_NO_SERIALIZATION
     	template<typename Archive>
     	void serialize(Archive& ar)
     	{
@@ -348,6 +361,7 @@ private:
     		}
     	}
     	friend struct serialization::access;
+#endif /* FLANN_NO_SERIALIZATION */
     };
     typedef Node* NodePtr;
     typedef BranchStruct<NodePtr, DistanceType> BranchSt;
@@ -412,8 +426,8 @@ private:
      */
     void meanSplit(int* ind, int count, int& index, int& cutfeat, DistanceType& cutval)
     {
-        memset(mean_,0,veclen_*sizeof(DistanceType));
-        memset(var_,0,veclen_*sizeof(DistanceType));
+        std::memset(mean_,0,veclen_*sizeof(DistanceType));
+        std::memset(var_,0,veclen_*sizeof(DistanceType));
 
         /* Compute mean values.  Only the first SAMPLE_MEAN values need to be
             sampled to get a good estimate.
@@ -484,7 +498,11 @@ private:
             }
         }
         /* Select a random integer in range [0,num-1], and return that index. */
+#ifndef FLANN_R_COMPAT
         int rnd = rand_int(num);
+#else
+        int rnd = std::uniform_int_distribution<>(0, num-1)(g);
+#endif /* FLANN_R_COMPAT */
         return (int)topind[rnd];
     }
 
@@ -530,7 +548,9 @@ private:
         //		checkID -= 1;  /* Set a different unique ID for each search. */
 
         if (trees_ > 1) {
-            fprintf(stderr,"It doesn't make any sense to use more than one tree for exact search");
+#ifndef FLANN_R_COMPAT
+            std::fprintf(stderr,"It doesn't make any sense to use more than one tree for exact search");
+#endif FLANN_R_COMPAT
         }
         if (trees_>0) {
             searchLevelExact<with_removed>(result, vec, tree_roots_[0], 0.0, epsError);
@@ -576,7 +596,7 @@ private:
                      float epsError, Heap<BranchSt>* heap, DynamicBitset& checked) const
     {
         if (result_set.worstDist()<mindist) {
-            //			printf("Ignoring branch, too far\n");
+            //			std::printf("Ignoring branch, too far\n");
             return;
         }
 
@@ -759,10 +779,15 @@ private:
      * number small of memory allocations.
      */
     PooledAllocator pool_;
-
+#ifdef FLANN_R_COMPAT
+    std::random_device rd;
+    std::mt19937 g = std::mt19937(rd());
+#endif
     USING_BASECLASS_SYMBOLS
 };   // class KDTreeIndex
 
 }
+
+#endif /* FLANN_ONLY_SINGLE_KDTREE */
 
 #endif //FLANN_KDTREE_INDEX_H_

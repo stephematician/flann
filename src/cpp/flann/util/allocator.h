@@ -31,8 +31,11 @@
 #ifndef FLANN_ALLOCATOR_H_
 #define FLANN_ALLOCATOR_H_
 
-#include <stdlib.h>
-#include <stdio.h>
+#include <cstddef> /* NULL, size_t */
+#ifndef FLANN_R_COMPAT
+  #include <cstdlib>
+  #include <cstdio>
+#endif /* FLANN_R_COMPAT */
 
 
 namespace flann
@@ -48,7 +51,11 @@ namespace flann
 template <typename T>
 T* allocate(size_t count = 1)
 {
-    T* mem = (T*) ::malloc(sizeof(T)*count);
+#ifndef FLANN_R_COMPAT
+    T* mem = (T*) std::malloc(sizeof(T)*count);
+#else
+    T* mem = new T[count];
+#endif /* FLANN_R_COMPAT */
     return mem;
 }
 
@@ -116,7 +123,11 @@ public:
         void* prev;
         while (base != NULL) {
             prev = *((void**) base); /* Get pointer to prev block. */
-            ::free(base);
+#ifndef FLANN_R_COMPAT
+            std::free(base);
+#else
+            delete [] static_cast<char *>(base);
+#endif /* FLANN_R_COMPAT */
             base = prev;
         }
         base = NULL;
@@ -151,9 +162,15 @@ public:
                         size + sizeof(void*) + (WORDSIZE-1) : BLOCKSIZE;
 
             // use the standard C malloc to allocate memory
-            void* m = ::malloc(blocksize);
+#ifndef FLANN_R_COMPAT
+            void* m = std::malloc(blocksize);
+#else
+            void* m = static_cast<void *>(new char[blocksize]);
+#endif /* FLANN_R_COMPAT */
             if (!m) {
-                fprintf(stderr,"Failed to allocate memory.\n");
+#ifndef FLANN_R_COMPAT
+                std::fprintf(stderr,"Failed to allocate memory.\n");
+#endif /* FLANN_R_COMPAT */
                 return NULL;
             }
 
@@ -194,7 +211,7 @@ public:
 
 }
 
-inline void* operator new (std::size_t size, flann::PooledAllocator& allocator)
+inline void* operator new (size_t size, flann::PooledAllocator& allocator)
 {
     return allocator.allocateMemory(size) ;
 }

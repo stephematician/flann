@@ -32,18 +32,19 @@
 #define FLANN_KDTREE_SINGLE_INDEX_H_
 
 #include <algorithm>
-#include <map>
 #include <cassert>
-#include <cstring>
+#include <cstddef> /* NULL, size_t */
+#ifndef FLANN_R_COMPAT
+  #include <cstdio>
+#endif /* FLANN_R_COMPAT */
+#include <vector>
 
 #include "flann/general.h"
 #include "flann/algorithms/nn_index.h"
-#include "flann/util/matrix.h"
-#include "flann/util/result_set.h"
-#include "flann/util/heap.h"
 #include "flann/util/allocator.h"
-#include "flann/util/random.h"
-#include "flann/util/saving.h"
+#ifndef FLANN_NO_SERIALIZATION
+  #include "flann/util/saving.h"
+#endif
 
 namespace flann
 {
@@ -153,6 +154,7 @@ public:
     }
 
 
+#ifndef FLANN_NO_SERIALIZATION
     template<typename Archive>
     void serialize(Archive& ar)
     {
@@ -185,19 +187,20 @@ public:
     }
 
 
-    void saveIndex(FILE* stream)
+    void saveIndex(std::FILE* stream)
     {
         serialization::SaveArchive sa(stream);
         sa & *this;
     }
 
 
-    void loadIndex(FILE* stream)
+    void loadIndex(std::FILE* stream)
     {
         freeIndex();
         serialization::LoadArchive la(stream);
         la & *this;
     }
+#endif /* FLANN_NO_SERIALIZATION */
 
     /**
      * Computes the inde memory usage
@@ -285,6 +288,7 @@ private:
         }
 
     private:
+#ifndef FLANN_NO_SERIALIZATION
         template<typename Archive>
         void serialize(Archive& ar)
         {
@@ -313,6 +317,7 @@ private:
             }
         }
         friend struct serialization::access;
+#endif /* FLANN_NO_SERIALIZATION */
     };
     typedef Node* NodePtr;
 
@@ -322,6 +327,7 @@ private:
         DistanceType low, high;
         
     private:
+#ifndef FLANN_NO_SERIALIZATION
         template <typename Archive>
         void serialize(Archive& ar)
         {
@@ -329,6 +335,7 @@ private:
             ar & high;
         }
         friend struct serialization::access;
+#endif /* FLANN_NO_SERIALIZATION */
     };
 
     typedef std::vector<Interval> BoundingBox;

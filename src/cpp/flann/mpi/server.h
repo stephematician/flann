@@ -30,18 +30,22 @@
 #ifndef MPI_SERVER_H_
 #define MPI_SERVER_H_
 
-#include <flann/mpi/index.h>
-#include <stdio.h>
+#ifndef FLANN_R_COMPAT
+
 #include <time.h>
 
+#include <cstdio>
 #include <cstdlib>
 #include <iostream>
+#include <stdexcept>
+
 #include <boost/bind.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/asio.hpp>
 #include <boost/thread/thread.hpp>
 
-#include "queries.h"
+#include "flann/mpi/index.h"
+#include "flann/mpi/queries.h"
 
 namespace flann {
 
@@ -149,5 +153,7 @@ private:
 
 } // namespace mpi
 } // namespace flann
+
+#endif /* FLANN_R_COMPAT */
 
 #endif // MPI_SERVER_H_

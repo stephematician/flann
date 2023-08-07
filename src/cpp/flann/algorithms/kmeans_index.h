@@ -31,24 +31,27 @@
 #ifndef FLANN_KMEANS_INDEX_H_
 #define FLANN_KMEANS_INDEX_H_
 
+#ifndef FLANN_ONLY_SINGLE_KDTREE
+
 #include <algorithm>
-#include <string>
-#include <map>
 #include <cassert>
+#include <cstddef> /* NULL, size_t */
+#ifndef FLANN_R_COMPAT
+  #include <cstdio>
+#endif /* FLANN_R_COMPAT */
+#include <cstring> /* memset */
 #include <limits>
-#include <cmath>
+#include <vector>
 
 #include "flann/general.h"
+#include "flann/algorithms/center_chooser.h"
 #include "flann/algorithms/nn_index.h"
-#include "flann/algorithms/dist.h"
-#include <flann/algorithms/center_chooser.h>
-#include "flann/util/matrix.h"
-#include "flann/util/result_set.h"
-#include "flann/util/heap.h"
 #include "flann/util/allocator.h"
-#include "flann/util/random.h"
-#include "flann/util/saving.h"
+#include "flann/util/heap.h"
 #include "flann/util/logger.h"
+#ifndef FLANN_NO_SERIALIZATION
+  #include "flann/util/saving.h"
+#endif /* FLANN_NO_SERIALIZATION */
 
 
 
@@ -230,6 +233,7 @@ public:
         }
     }
 
+#ifndef FLANN_NO_SERIALIZATION
     template<typename Archive>
     void serialize(Archive& ar)
     {
@@ -257,18 +261,19 @@ public:
     	}
     }
 
-    void saveIndex(FILE* stream)
+    void saveIndex(std::FILE* stream)
     {
     	serialization::SaveArchive sa(stream);
     	sa & *this;
     }
 
-    void loadIndex(FILE* stream)
+    void loadIndex(std::FILE* stream)
     {
     	freeIndex();
     	serialization::LoadArchive la(stream);
     	la & *this;
     }
+#endif /* FLANN_NO_SERIALIZATION */
 
     /**
      * Find set of nearest neighbors to vec. Their indices are stored inside
@@ -351,18 +356,19 @@ private:
     	size_t index;
     	ElementType* point;
     private:
+#ifndef FLANN_NO_SERIALIZATION
     	template<typename Archive>
     	void serialize(Archive& ar)
     	{
     		typedef KMeansIndex<Distance> Index;
     		Index* obj = static_cast<Index*>(ar.getObject());
-
     		ar & index;
 //    		ar & point;
 
 			if (Archive::is_loading::value) point = obj->points_[index];
     	}
     	friend struct serialization::access;
+#endif /* FLANN_NO_SERIALIZATION */
     };
 
     /**
@@ -409,6 +415,7 @@ private:
             }
         }
 
+#ifndef FLANN_NO_SERIALIZATION
     	template<typename Archive>
     	void serialize(Archive& ar)
     	{
@@ -446,6 +453,7 @@ private:
     		}
     	}
     	friend struct serialization::access;
+#endif /* FLANN_NO_SERIALIZATION */
     };
     typedef Node* NodePtr;
 
@@ -499,7 +507,7 @@ private:
 
         DistanceType* mean = new DistanceType[veclen_];
         memoryCounter_ += int(veclen_*sizeof(DistanceType));
-        memset(mean,0,veclen_*sizeof(DistanceType));
+        std::memset(mean,0,veclen_*sizeof(DistanceType));
 
         for (size_t i=0; i<size; ++i) {
             ElementType* vec = points_[indices[i]];
@@ -608,7 +616,7 @@ private:
 
             // compute the new cluster centers
             for (int i=0; i<branching; ++i) {
-                memset(dcenters[i],0,sizeof(double)*veclen_);
+                std::memset(dcenters[i],0,sizeof(double)*veclen_);
                 radiuses[i] = 0;
             }
             for (int i=0; i<indices_length; ++i) {
@@ -1064,5 +1072,7 @@ private:
 };
 
 }
+
+#endif /* FLANN_ONLY_SINGLE_KDTREE */
 
 #endif //FLANN_KMEANS_INDEX_H_

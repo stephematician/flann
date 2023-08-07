@@ -12,9 +12,14 @@
  * Adapted for FLANN by Marius Muja
  */
 
+#include <algorithm> /* swap */
+#include <cstddef>   /* NULL, size_t */
+#ifndef FLANN_R_COMPAT
+  #include <ostream>
+#endif
 #include <stdexcept>
-#include <ostream>
 #include <typeinfo>
+
 
 namespace flann
 {
@@ -31,11 +36,13 @@ struct empty_any
 {
 };
 
+#ifndef FLANN_R_COMPAT
 inline std::ostream& operator <<(std::ostream& out, const empty_any&)
 {
     out << "[empty_any]";
     return out;
 }
+#endif /* FLANN_R_COMPAT */
 
 struct base_any_policy
 {
@@ -45,16 +52,18 @@ struct base_any_policy
     virtual void move(void* const* src, void** dest) = 0;
     virtual void* get_value(void** src) = 0;
     virtual const void* get_value(void* const * src) = 0;
-    virtual ::size_t get_size() = 0;
-    virtual const std::type_info& type() = 0;
+    virtual size_t get_size() = 0;
+    virtual const std::type_info & type() = 0;
+#ifndef FLANN_R_COMPAT
     virtual void print(std::ostream& out, void* const* src) = 0;
+#endif /* FLANN_R_COMPAT */
 };
 
 template<typename T>
 struct typed_base_any_policy : base_any_policy
 {
-    virtual ::size_t get_size() { return sizeof(T); }
-    virtual const std::type_info& type() { return typeid(T); }
+    virtual size_t get_size() { return sizeof(T); }
+    virtual const std::type_info & type() { return typeid(T); }
 
 };
 
@@ -70,7 +79,9 @@ struct small_any_policy : typed_base_any_policy<T>
     virtual void move(void* const* src, void** dest) { *dest = *src; }
     virtual void* get_value(void** src) { return reinterpret_cast<void*>(src); }
     virtual const void* get_value(void* const * src) { return reinterpret_cast<const void*>(src); }
+#ifndef FLANN_R_COMPAT
     virtual void print(std::ostream& out, void* const* src) { out << *reinterpret_cast<T const*>(src); }
+#endif /* FLANN_R_COMPAT */
 };
 
 template<typename T>
@@ -98,7 +109,9 @@ struct big_any_policy : typed_base_any_policy<T>
     }
     virtual void* get_value(void** src) { return *src; }
     virtual const void* get_value(void* const * src) { return *src; }
+#ifndef FLANN_R_COMPAT
     virtual void print(std::ostream& out, void* const* src) { out << *reinterpret_cast<T const*>(*src); }
+#endif /* FLANN_R_COMPAT */
 };
 
 template<typename T>
@@ -283,14 +296,18 @@ public:
         return policy->type();
     }
 
+#ifndef FLANN_R_COMPAT
     friend std::ostream& operator <<(std::ostream& out, const any& any_val);
+#endif /* FLANN_R_COMPAT */
 };
 
+#ifndef FLANN_R_COMPAT
 inline std::ostream& operator <<(std::ostream& out, const any& any_val)
 {
     any_val.policy->print(out,&any_val.object);
     return out;
 }
+#endif /* FLANN_R_COMPAT */
 
 }
 

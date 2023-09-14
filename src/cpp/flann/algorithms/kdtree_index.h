@@ -550,7 +550,7 @@ private:
         if (trees_ > 1) {
 #ifndef FLANN_R_COMPAT
             std::fprintf(stderr,"It doesn't make any sense to use more than one tree for exact search");
-#endif FLANN_R_COMPAT
+#endif /* FLANN_R_COMPAT */
         }
         if (trees_>0) {
             searchLevelExact<with_removed>(result, vec, tree_roots_[0], 0.0, epsError);
@@ -782,7 +782,7 @@ private:
 #ifdef FLANN_R_COMPAT
     std::random_device rd;
     std::mt19937 g = std::mt19937(rd());
-#endif
+#endif /* FLANN_R_COMPAT */
     USING_BASECLASS_SYMBOLS
 };   // class KDTreeIndex
 

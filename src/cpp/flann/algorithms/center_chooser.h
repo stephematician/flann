@@ -14,10 +14,9 @@
   #include <random>
 #endif /* FLANN_R_COMPAT */
 
+#include "flann/algorithms/dist.h"
 #include "flann/util/matrix.h"
-#ifndef FLANN_R_COMPAT
-  #include "flann/util/random.h"
-#endif  /* FLANN_R_COMPAT */
+#include "flann/util/random.h"
 
 namespace flann
 {
@@ -107,6 +106,10 @@ protected:
 	const Distance distance_;
     const std::vector<ElementType*>& points_;
     size_t cols_;
+#ifdef FLANN_R_COMPAT
+    std::random_device rd;
+    std::mt19937 g = std::mt19937(rd());
+#endif /* FLANN_R_COMPAT */
 };
 
 
@@ -152,10 +155,6 @@ public:
 
         centers_length = index;
     }
-#ifdef FLANN_R_COMPAT
-    std::random_device rd;
-    std::mt19937 g = std::mt19937(rd());
-#endif
 };
 
 
@@ -185,7 +184,7 @@ public:
         int rnd = rand_int(n);
         assert(rnd >=0 && rnd < n);
 #else
-        int rnd = std::uniform_int_distribution<>(0, n-1)(g);
+        int rnd = std::uniform_int_distribution<>(0, n-1)(this->g);
 #endif /* FLANN_R_COMPAT */
 
         centers[0] = indices[rnd];
@@ -250,7 +249,7 @@ public:
         int index = rand_int(n);
         assert(index >=0 && index < n);
 #else
-        int index = std::uniform_int_distribution<>(0, n-1)(g);
+        int index = std::uniform_int_distribution<>(0, n-1)(this->g);
 #endif /* FLANN_R_COMPAT */
         centers[0] = indices[index];
 
@@ -279,7 +278,7 @@ public:
 #ifndef FLANN_R_COMPAT
                 double randVal = rand_double(currentPot);
 #else
-                double randVal = std::uniform_real_distribution<>(0.0, currentPot)(g);
+                double randVal = std::uniform_real_distribution<>(0.0, currentPot)(this->g);
 #endif /* FLANN_R_COMPAT */
                 for (index = 0; index < n-1; index++) {
                     if (randVal <= closestDistSq[index]) break;
@@ -355,7 +354,7 @@ public:
         int index = rand_int(n);
         assert(index >=0 && index < n);
 #else
-        int index = std::uniform_int_distribution<>(0, n-1)(g);
+        int index = std::uniform_int_distribution<>(0, n-1)(this->g);
 #endif /* FLANN_R_COMPAT */
         centers[0] = indices[index];
 

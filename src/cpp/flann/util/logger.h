@@ -87,6 +87,8 @@ class Logger
         if (level > logLevel ) return -1;
         int ret = std::vfprintf(stream, fmt, arglist);
         return ret;
+#else
+        return 0;
 #endif /* FLANN_R_COMPAT */
     }
 
